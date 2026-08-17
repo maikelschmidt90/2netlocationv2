@@ -1,0 +1,133 @@
+workflows:
+  android-2net:
+    name: 2NET Rastreamento - Android
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      android_signing:
+        - 2net_android_keystore
+
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      - name: Configure Flutter
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+          flutter --version
+
+      - name: Install dependencies
+        script: |
+          flutter clean
+          flutter pub get
+
+      - name: Analyze project
+        script: |
+          flutter analyze
+
+      - name: Build Android App Bundle
+        script: |
+          flutter build appbundle --release
+
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab
+      - build/app/outputs/flutter-apk/*.apk
+
+  android-2net-unsigned-test:
+    name: 2NET Rastreamento - Android Test
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      - name: Configure Flutter
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+
+      - name: Install dependencies
+        script: |
+          flutter pub get
+
+      - name: Build unsigned APK
+        script: |
+          flutter build apk --release
+
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+
+  ios-2net:
+    name: 2NET Rastreamento - iOS
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: org.traccar.client.TraccarClient
+
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      - name: Configure Flutter
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+          flutter --version
+
+      - name: Restore iOS project files
+        script: |
+          if [ ! -f ios/Podfile ]; then
+            echo "ios/Podfile não encontrado. Gerando arquivos iOS ausentes..."
+            flutter create --platforms=ios .
+          fi
+
+      - name: Install dependencies
+        script: |
+          flutter pub get
+          cd ios
+          pod install --repo-update
+
+      - name: Apply iOS signing profiles
+        script: |
+          xcode-project use-profiles
+
+      - name: Build IPA
+        script: |
+          flutter build ipa --release
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - $CM_EMAIL
+        notify:
+          success: true
+          failure: true
