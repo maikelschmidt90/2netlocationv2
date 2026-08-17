@@ -31,13 +31,18 @@ workflows:
         script: |
           flutter analyze
 
-      - name: Build Android App Bundle
+      - name: Build Android APK
         script: |
           flutter build apk --release
 
+      - name: Build Android App Bundle
+        script: |
+          flutter build appbundle --release
+
     artifacts:
-      - build/app/outputs/bundle/release/*.aab
       - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/bundle/release/*.aab
+
 
   android-2net-unsigned-test:
     name: 2NET Rastreamento - Android Test
@@ -71,6 +76,7 @@ workflows:
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
 
+
   ios-2net:
     name: 2NET Rastreamento - iOS
     max_build_duration: 90
@@ -78,6 +84,7 @@ workflows:
 
     environment:
       flutter: stable
+
       ios_signing:
         distribution_type: app_store
         bundle_identifier: org.traccar.client.TraccarClient
