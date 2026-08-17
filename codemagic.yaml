@@ -33,7 +33,7 @@ workflows:
 
       - name: Build Android App Bundle
         script: |
-          flutter build appbundle --release
+          flutter build apk --release
 
     artifacts:
       - build/app/outputs/bundle/release/*.aab
