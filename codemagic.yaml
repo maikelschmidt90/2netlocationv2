@@ -6,8 +6,6 @@ workflows:
 
     environment:
       flutter: stable
-      android_signing:
-        - 2net_android_keystore
 
     triggering:
       events:
